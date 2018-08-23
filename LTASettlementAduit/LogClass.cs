@@ -18,10 +18,8 @@ namespace LTASettlementAduit
             }
             StreamWriter sw = new StreamWriter(LogPath +@"\"+ DateTime.Now.ToString("yyyy-MM-dd") + ".log", true);
             sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss  ") + content);
-            //sw.WriteLine(content);
             sw.Flush();
             sw.Close();
-          //  Console.WriteLine(content);
         }
 
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
@@ -88,9 +89,12 @@ namespace LTASettlementAduit
         private void Form1_Load(object sender, EventArgs e)
         {
             InitCarparkList();
-            //string path = "C:\\Users\\admin\\source\\repos\\LTASettlementAduit\\LTASettlementAduit\\bin\\Debug\\Log\\10.txt";
-            Thread thr = new Thread(() => RunCepassCheck());
-            thr.Start();
+            if (!GetValue("manual").Equals("true"))
+            {
+                Thread thr = new Thread(() => RunCepassCheck());
+                thr.Start();
+            }
+
         }
         #region Cepass file upload check.
         private void AlarmTxt(string str)
@@ -99,7 +103,33 @@ namespace LTASettlementAduit
             alarmTxt = alarmTxt + str;
             alarmTxt = alarmTxt + Environment.NewLine;
         }
-        private void SendEmail(string body, string sub, string address)
+        private static string GetValue(string strkey)
+        {
+
+            foreach (string key in ConfigurationManager.AppSettings)
+            {
+                if (key.Contains(strkey))
+                {
+                    return ConfigurationManager.AppSettings[key];
+                }
+            }
+            return "";
+
+        }
+
+        private static List<string> GetEmail(string strkey)
+        {
+            List<string> list = new List<string>();
+            foreach (string key in ConfigurationManager.AppSettings)
+            {
+                if (key.Contains(strkey))
+                {
+                    list.Add(ConfigurationManager.AppSettings[key]);
+                }
+            }
+            return list;
+        }
+        private void SendEmail(string sub, string body, string address)
         {
             // Command line argument must the the SMTP host.
             SmtpClient client = new SmtpClient();
@@ -110,11 +140,26 @@ namespace LTASettlementAduit
             client.DeliveryMethod = SmtpDeliveryMethod.Network;
             client.UseDefaultCredentials = false;
             client.Credentials = new NetworkCredential("seasonalarm@gmail.com", "wei3shen2me");
-            MailMessage mm = new MailMessage("SeasonAlarm@gmail.com", address, body, sub);
+            MailMessage mm = new MailMessage("seasonalarm@gmail.com", address, sub, body);
+            MailAddress copy1 = new MailAddress("jzhang@Secureparking.com.sg");
+           // MailAddress copy2 = new MailAddress("leon@Secureparking.com.sg");
+           // MailAddress copy3 = new MailAddress("schew@secureparking.com.sg");
+            mm.CC.Add(copy1);    //CC email 
+           // mm.CC.Add(copy2);
+           // mm.CC.Add(copy3);
             mm.BodyEncoding = UTF8Encoding.UTF8;
             mm.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure;
-            mm.To.Add(new MailAddress("jzhang@secureparking.com.sg", "SeasonAlarm@gmail.com"));
-            mm.To.Add(new MailAddress("fayas@secureparking.com.sg", "SeasonAlarm@gmail.com"));
+
+            List<string> lis = GetEmail("email");
+
+            if (lis != null)
+            {
+                foreach (string str in lis)
+                {
+                    mm.To.Add(new MailAddress(str, "seasonalarm@gmail.com"));
+                }
+            }
+
             try
             {
                 client.Send(mm);
@@ -171,7 +216,7 @@ namespace LTASettlementAduit
                 try
                 {
                     ds = SqlHelper.ExecuteDataset(constr, CommandType.Text, cmd, para);
-                    LogClass.WriteLog($"{kv.Key} Collected Data.");
+                    LogClass.WriteLog($"{kv.Key} Collected LTA Data.");
                 }
                 catch (SqlException e)
                 {
@@ -243,7 +288,17 @@ namespace LTASettlementAduit
                 string collec_file = reader["Collection_File"].ToString();
                 string carpark = reader["carparkID"].ToString();
                 string batch = reader["batch"].ToString();
-                string constr_batch_server = $"Data Source={batchIP[batch]};uid=sa;pwd=yzhh2007;database=LTACS";
+                string constr_batch_server = null;
+
+                try
+                {
+                    constr_batch_server = $"Data Source={batchIP[batch]};uid=sa;pwd=yzhh2007;database=LTACS";
+                }
+                catch (Exception e)
+                {
+                    AlarmTxt($"Program Can Not Find LTA Server For Batch {batch},{e.ToString()}");
+                }
+
                 string cmd_batch_server = $"SELECT * FROM [dbo].[Coll_File_History] where Upload_Time>'{DateTime.Now.ToString("yyyy-MM-dd")}' AND File_Name like '%{collec_file}'";
                 DataSet ds = null;
                 try
@@ -298,7 +353,6 @@ namespace LTASettlementAduit
             Thread thr = new Thread(() => compareWithServer());
             thr.Start();
         }
-
 
         #region Read Cepass Result File 
         private void CollectData()

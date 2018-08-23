@@ -35,7 +35,7 @@
             // 
             // ReadPMS
             // 
-            ReadPMS.Location = new System.Drawing.Point(243, 189);
+            ReadPMS.Location = new System.Drawing.Point(127, 61);
             ReadPMS.Name = "ReadPMS";
             ReadPMS.Size = new System.Drawing.Size(81, 31);
             ReadPMS.TabIndex = 0;
@@ -45,7 +45,7 @@
             // 
             // CompareServer
             // 
-            this.CompareServer.Location = new System.Drawing.Point(420, 189);
+            this.CompareServer.Location = new System.Drawing.Point(110, 140);
             this.CompareServer.Name = "CompareServer";
             this.CompareServer.Size = new System.Drawing.Size(126, 31);
             this.CompareServer.TabIndex = 1;
@@ -57,7 +57,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(347, 261);
             this.Controls.Add(this.CompareServer);
             this.Controls.Add(ReadPMS);
             this.Name = "Form1";
